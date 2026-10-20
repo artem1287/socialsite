@@ -1,0 +1,1222 @@
+<title>Statline</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;700&display=swap">
+<style>
+/* Full-screen 3-column shell — nav rail · scrolling stat feed · live-ranking rail. */
+:root{
+  --bg:#f4f4f1;
+  --surface:#ffffff;
+  --surface-2:#f6f5f1;
+  --line:#e8e7e2;
+  --line-soft:#eeede9;
+  --fg:#16171b;
+  --fg-2:#3a3c42;
+  --muted:#8a8c93;
+  --faint:#b4b6bc;
+  --axis:#c6c5bf;
+  --accent:#4b57f5;
+  --accent-soft:#edeefe;
+  --ink:#15161b;
+  --good:#1a9d66;
+  --bad:#e0533b;
+  --hair:rgba(23,24,30,.08);
+  --c-economy:#4b57f5;  --c-economy-bg:#edeefe;
+  --c-climate:#17a06a;  --c-climate-bg:#e7f6ef;
+  --c-health:#e0533b;   --c-health-bg:#fcebe7;
+  --c-sports:#d99a1f;   --c-sports-bg:#fbf1dc;
+  --c-science:#7c5cff;  --c-science-bg:#f0ecff;
+  --c-work:#2a2c33;     --c-work-bg:#ececef;
+  --c-civics:#3b7de0;   --c-civics-bg:#e7f0fc;
+  --card-shadow:0 2px 5px rgba(44,46,84,.05), 0 14px 30px rgba(44,46,84,.07);
+  --f-sans:"Hanken Grotesk","Helvetica Neue",Arial,sans-serif;
+  --f-display:"Bricolage Grotesque","Hanken Grotesk",Arial,sans-serif;
+  --f-mono:"Spline Sans Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e0f12; --surface:#15161a; --surface-2:#191a1f; --line:#26282e; --line-soft:#212329;
+    --fg:#f2f2f4; --fg-2:#c9cad0; --muted:#8c8e96; --faint:#5a5c64; --axis:#43454c;
+    --accent:#6b76ff; --accent-soft:#1d2140; --ink:#2c2e36; --good:#35b87d; --bad:#f06a52;
+    --hair:rgba(255,255,255,.09);
+    --c-economy:#6b76ff; --c-economy-bg:#1d2140;
+    --c-climate:#34c088; --c-climate-bg:#122c22;
+    --c-health:#f0715a; --c-health-bg:#331c18;
+    --c-sports:#e6b145; --c-sports-bg:#2e2512;
+    --c-science:#9b82ff; --c-science-bg:#221c3d;
+    --c-work:#c9cad0; --c-work-bg:#24262c;
+    --c-civics:#5a97ef; --c-civics-bg:#132339;
+    --card-shadow:0 1px 3px rgba(0,0,0,.3),0 14px 30px rgba(0,0,0,.4);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e0f12; --surface:#15161a; --surface-2:#191a1f; --line:#26282e; --line-soft:#212329;
+  --fg:#f2f2f4; --fg-2:#c9cad0; --muted:#8c8e96; --faint:#5a5c64; --axis:#43454c;
+  --accent:#6b76ff; --accent-soft:#1d2140; --ink:#2c2e36; --good:#35b87d; --bad:#f06a52;
+  --hair:rgba(255,255,255,.09);
+  --c-economy:#6b76ff; --c-economy-bg:#1d2140;
+  --c-climate:#34c088; --c-climate-bg:#122c22;
+  --c-health:#f0715a; --c-health-bg:#331c18;
+  --c-sports:#e6b145; --c-sports-bg:#2e2512;
+  --c-science:#9b82ff; --c-science-bg:#221c3d;
+  --c-work:#c9cad0; --c-work-bg:#24262c;
+  --c-civics:#5a97ef; --c-civics-bg:#132339;
+  --card-shadow:0 1px 3px rgba(0,0,0,.3),0 14px 30px rgba(0,0,0,.4);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--fg);
+  font-family:var(--f-sans);font-size:15px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;letter-spacing:-.004em;
+}
+button{font-family:inherit;color:inherit;cursor:pointer}
+::selection{background:var(--accent);color:#fff}
+
+/* ---------- shell (full screen) ---------- */
+.app{
+  display:grid;
+  grid-template-columns:262px minmax(0,1fr) 324px;
+  min-height:100vh;
+  background:var(--surface);
+}
+
+/* ---------- left rail ---------- */
+.rail-l{
+  position:sticky;top:0;height:100vh;
+  padding:26px 18px 20px;
+  display:flex;flex-direction:column;gap:6px;
+  padding-left:max(18px,env(safe-area-inset-left,0px));
+}
+.brand{display:flex;align-items:center;gap:11px;padding:6px 10px 20px}
+.brand .mark{
+  width:38px;height:38px;border-radius:13px;
+  background:linear-gradient(140deg,#6b8cff,#a86bff 52%,#ff85b8);
+  display:grid;place-items:center;color:#fff;font-weight:800;font-size:21px;flex:none;
+  box-shadow:0 6px 16px rgba(130,100,255,.4);
+}
+.brand .name{font-family:var(--f-display);font-weight:800;font-size:23px;letter-spacing:-.02em}
+.nav-item{
+  display:flex;align-items:center;gap:13px;width:100%;text-align:left;
+  background:none;border:0;padding:13px 15px;border-radius:15px;
+  color:var(--fg-2);font-weight:600;font-size:15.5px;transition:background .12s,color .12s;
+}
+.nav-item svg{width:20px;height:20px;flex:none;stroke:currentColor}
+.nav-item:hover{background:var(--surface-2)}
+.nav-item.active{background:var(--ink);color:#fff;box-shadow:0 10px 22px rgba(17,18,22,.26)}
+.nav-item.active svg{stroke:#fff}
+.rail-sect{margin:16px 0 4px;padding:0 13px;display:flex;align-items:center;justify-content:space-between}
+.rail-sect span{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;color:var(--faint);}
+.rail-sect svg{width:14px;height:14px;stroke:var(--faint)}
+.topic{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  background:none;border:0;padding:9px 13px;border-radius:12px;
+  color:var(--fg-2);font-weight:600;font-size:15px;transition:background .12s;
+}
+.topic:hover{background:var(--surface-2)}
+.topic.on{background:var(--surface-2)}
+.topic .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.topic.on .dot{box-shadow:0 0 0 4px color-mix(in srgb,currentColor 18%,transparent)}
+.divider{height:1px;background:var(--line);margin:14px 10px}
+.spacer{flex:1}
+.me{
+  display:flex;align-items:center;gap:11px;padding:10px;border-radius:16px;
+  background:var(--surface-2);
+}
+.me .av{width:36px;height:36px;border-radius:50%;background:#16171b;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+:root[data-theme="dark"] .me .av, :root:not([data-theme="light"]) .me .av{background:#2a2c33}
+.me .who{min-width:0;flex:1}
+.me .who b{display:block;font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.me .who small{color:var(--muted);font-size:12.5px}
+.me .more{margin-left:auto;color:var(--faint);letter-spacing:1px;background:none;border:0;font-size:18px;font-weight:800}
+
+/* ---------- center feed ---------- */
+.feed{min-width:0;padding:0 28px 80px}
+.topbar{
+  position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--surface) 88%,transparent);
+  backdrop-filter:blur(12px);
+  display:flex;align-items:center;gap:12px;
+  padding:16px 2px 14px;
+}
+.tb-sp{flex:1}
+.periods{display:inline-flex;gap:3px;background:var(--surface-2);padding:4px;border-radius:13px}
+.periods .pl{align-self:center;font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;color:var(--faint);padding:0 8px 0 6px}
+.periods button{border:0;background:none;padding:7px 12px;border-radius:9px;font-family:var(--f-mono);font-size:12px;font-weight:500;color:var(--muted);transition:background .12s,color .12s}
+.periods button.on{background:var(--ink);color:#fff}
+.periods button:hover:not(.on){color:var(--fg)}
+.icon-btn{
+  width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);
+  display:grid;place-items:center;transition:background .12s,transform .08s;
+}
+.icon-btn:hover{background:var(--surface-2)}
+.icon-btn:active{transform:scale(.95)}
+.icon-btn svg{width:19px;height:19px;stroke:var(--fg-2)}
+.icon-btn .bell-dot{position:absolute;margin:-14px 0 0 13px;width:8px;height:8px;border-radius:50%;background:var(--bad);border:2px solid var(--surface)}
+
+.tabsrow{display:flex;align-items:center;gap:22px;margin-bottom:24px}
+.feed-title{font-family:var(--f-display);font-size:30px;font-weight:800;letter-spacing:-.03em;margin:0 auto 0 0;line-height:1}
+.tab{background:none;border:0;padding:6px 0 8px;font-size:16px;font-weight:700;color:var(--muted);position:relative;letter-spacing:-.01em}
+.tab.active{color:var(--fg)}
+.tab.active::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--accent);border-radius:3px}
+.live-ind{display:flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;color:var(--muted);}
+.live-ind .pulse{width:8px;height:8px;border-radius:50%;background:var(--good);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(26,157,102,.5)}70%{box-shadow:0 0 0 7px rgba(26,157,102,0)}100%{box-shadow:0 0 0 0 rgba(26,157,102,0)}}
+
+.cards{display:flex;flex-direction:column;gap:20px}
+
+/* ---------- stat card ---------- */
+.card{border:0;border-radius:28px;box-shadow:var(--card-shadow);overflow:hidden;animation:rise .4s cubic-bezier(.2,.7,.3,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card-top{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;padding:20px 24px 6px}
+.cat{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;font-weight:700;padding:5px 9px;border-radius:7px;flex:none}
+.ago{color:var(--muted);font-size:13.5px;font-weight:500}
+.region{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--fg-2)}
+.region .flag{font-size:15px;line-height:1}
+.dotsep{color:var(--faint)}
+.bookmark{margin-left:8px;background:none;border:0;color:var(--faint);padding:2px;transition:color .12s,transform .1s}
+.ct-sp{flex:1}
+.cardrange{display:inline-flex;gap:2px;background:var(--surface-2);padding:3px;border-radius:9px;align-self:center}
+.cardrange button{border:0;background:none;padding:4px 8px;border-radius:7px;font-family:var(--f-mono);font-size:11px;font-weight:500;color:var(--muted)}
+.cardrange button.on{background:var(--ink);color:#fff}
+.cardrange button:hover:not(.on){color:var(--fg)}
+.bookmark:hover{color:var(--fg-2)}
+.bookmark:active{transform:scale(.88)}
+.bookmark svg{width:20px;height:22px}
+.bookmark.on{color:var(--accent)}
+.bookmark.on svg path{fill:var(--accent)}
+
+.card-body{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:20px;padding:6px 24px 18px;align-items:center}
+.stat-num{font-family:var(--f-display);font-size:58px;line-height:1;font-weight:800;letter-spacing:-.035em;font-variant-numeric:tabular-nums;margin:10px 0 0}
+.stat-label{font-size:21px;font-weight:600;letter-spacing:-.02em;margin:14px 0 0;max-width:22ch}
+.stat-range{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.06em;color:var(--muted);margin-top:22px}
+.since{display:inline-flex;align-items:center;gap:7px;margin-top:14px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;padding:6px 11px;border-radius:9px}
+.since.up{color:var(--good);background:color-mix(in srgb,var(--good) 11%,transparent)}
+.since.down{color:var(--bad);background:color-mix(in srgb,var(--bad) 11%,transparent)}
+.since .arw{font-size:14px;line-height:1}
+.since em{font-style:normal;font-weight:500;color:var(--muted);font-family:var(--f-mono);font-size:10.5px;letter-spacing:.05em;margin-left:2px}
+
+/* ---------- chart ---------- */
+.chartwrap{position:relative;width:100%;height:196px;touch-action:none}
+.chart{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
+.caxis{position:absolute;font-family:var(--f-mono);font-size:10px;color:var(--muted);letter-spacing:.02em;pointer-events:none;white-space:nowrap;z-index:1;font-variant-numeric:tabular-nums}
+.caxis.y{left:0;text-align:right;padding-right:10px;transform:translateY(-50%);font-size:12.5px;font-weight:700;color:var(--fg)}
+.caxis.x{bottom:0;transform:translateX(-50%);font-size:10.5px;font-weight:600;color:var(--fg-2)}
+.cunit{position:absolute;top:1px;right:2px;font-family:var(--f-mono);font-size:9.5px;font-weight:700;letter-spacing:.09em;color:var(--faint);pointer-events:none;z-index:1}
+.cvline{position:absolute;width:1px;background:var(--axis);opacity:0;pointer-events:none;z-index:2}
+.cend{position:absolute;width:10px;height:10px;border-radius:50%;background:var(--dotc);transform:translate(-50%,-50%);pointer-events:none;z-index:3;box-shadow:0 0 0 5px color-mix(in srgb,var(--dotc) 16%,transparent);transition:opacity .1s}
+.cdot{position:absolute;width:13px;height:13px;border-radius:50%;background:var(--surface);border:3px solid var(--dotc);transform:translate(-50%,-50%);opacity:0;pointer-events:none;z-index:4;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.ctip{position:absolute;transform:translate(-50%,calc(-100% - 13px));background:var(--fg);color:var(--bg);padding:6px 11px;border-radius:9px;font-size:14px;font-weight:700;white-space:nowrap;text-align:center;opacity:0;pointer-events:none;z-index:5;font-variant-numeric:tabular-nums;box-shadow:0 8px 22px rgba(0,0,0,.22)}
+.ctip small{display:block;font-weight:500;opacity:.72;font-size:10.5px;letter-spacing:.02em;margin-top:2px;font-family:var(--f-mono)}
+.chartwrap.hovering .cdot,.chartwrap.hovering .cvline,.chartwrap.hovering .ctip{opacity:1}
+
+/* vertical bars */
+.barchart{display:flex;gap:10px;align-items:flex-end;height:196px;width:100%}
+.bar{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:flex-end}
+.bar .bwrap{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center}
+.bar .bcol{width:70%;border-radius:8px 8px 3px 3px;min-height:4px;transition:height .3s}
+.bar .bv{font-family:var(--f-mono);font-size:11.5px;font-weight:700;color:var(--fg)}
+.bar .bn{font-size:11px;color:var(--muted);text-align:center;line-height:1.15;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ranking (horizontal bars) */
+.hbars{display:flex;flex-direction:column;gap:9px;width:100%}
+.hrow{display:grid;grid-template-columns:104px 1fr auto;align-items:center;gap:11px}
+.hrow .hn{font-size:13px;color:var(--fg-2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hrow .htrack{background:var(--surface-2);border-radius:7px;height:15px;overflow:hidden}
+.hrow .hfill{height:100%;border-radius:7px;transition:width .3s}
+.hrow .hv{font-family:var(--f-mono);font-size:12px;font-weight:700;color:var(--fg);text-align:right}
+/* composition (donut) */
+.donutwrap{display:flex;align-items:center;gap:20px;width:100%;flex-wrap:wrap}
+.donut{flex:none}
+.legend{display:flex;flex-direction:column;gap:7px;flex:1;min-width:140px}
+.leg{display:grid;grid-template-columns:12px 1fr auto;align-items:center;gap:9px}
+.leg .ld{width:11px;height:11px;border-radius:3px}
+.leg .ln{font-size:13px;color:var(--fg-2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.leg .lv{font-family:var(--f-mono);font-size:12px;font-weight:700;color:var(--fg)}
+
+.meta{display:grid;grid-template-columns:1.4fr 1fr;border-top:1px solid var(--hair);background:transparent}
+.meta>div{padding:15px 24px}
+.meta>div+div{border-left:1px solid var(--hair)}
+.meta dt{font-family:var(--f-mono);font-size:10px;letter-spacing:.11em;color:var(--faint);margin-bottom:5px}
+.meta dd{margin:0;font-size:14px;font-weight:600;color:var(--fg-2)}
+.meta .verified{color:var(--good);margin-left:3px}
+
+.actions{display:flex;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid var(--hair)}
+.act{display:inline-flex;align-items:center;gap:8px;background:none;border:0;padding:9px 13px;border-radius:12px;color:var(--fg-2);font-weight:650;font-size:14px;transition:background .12s,color .12s}
+.act svg{width:18px;height:18px;stroke:currentColor;fill:none}
+.act:hover{background:color-mix(in srgb,var(--surface) 55%,transparent)}
+.act.up.on{color:var(--accent)}
+.act.up.on svg{fill:var(--accent);stroke:var(--accent)}
+.act .count{font-variant-numeric:tabular-nums}
+.act .badge{background:color-mix(in srgb,var(--surface) 72%,transparent);border-radius:20px;padding:1px 9px;font-size:12.5px;font-weight:700;color:var(--fg-2)}
+.act.share{margin-left:auto}
+
+/* ---------- right rail ---------- */
+.rail-r{position:sticky;top:0;height:100vh;overflow:auto;padding:30px 24px;padding-right:max(24px,env(safe-area-inset-right,0px))}
+.rr-eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;color:var(--accent);font-weight:700}
+.rr-title{font-family:var(--f-display);font-size:25px;font-weight:800;letter-spacing:-.03em;margin:10px 0 7px;line-height:1.1}
+.rr-sub{color:var(--muted);font-size:13px;margin:0 0 6px}
+.rank{display:flex;gap:15px;padding:19px 4px;border-top:1px solid var(--line)}
+.rank:first-of-type{border-top:0}
+.rank .no{font-family:var(--f-mono);font-size:13px;color:var(--faint);font-weight:700;padding-top:3px;width:18px;flex:none}
+.rank .rbody{min-width:0;flex:1}
+.rank .rcat{font-family:var(--f-mono);font-size:10px;letter-spacing:.11em;font-weight:700}
+.rank .rval{font-family:var(--f-display);font-size:30px;font-weight:800;letter-spacing:-.03em;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.rank .rlabel{font-size:14px;color:var(--fg-2);font-weight:600}
+.rank .rdelta{font-family:var(--f-mono);font-size:12px;margin-top:7px;display:flex;align-items:center;gap:5px}
+.rank .rdelta.up{color:var(--good)} .rank .rdelta.down{color:var(--bad)}
+.rr-foot{display:flex;align-items:center;gap:9px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--f-mono);font-size:11px;letter-spacing:.04em}
+.rr-foot .d{width:7px;height:7px;border-radius:50%;background:var(--good)}
+
+/* ---------- profile / empty ---------- */
+.panel{background:var(--surface-2);border-radius:24px;padding:30px}
+.empty{text-align:center;color:var(--muted);padding:70px 20px}
+.empty svg{width:40px;height:40px;stroke:var(--faint);margin-bottom:14px}
+.empty b{font-family:var(--f-display);display:block;color:var(--fg);font-size:18px;margin-bottom:5px;font-weight:700}
+
+.searchwrap{overflow:hidden;max-height:0;transition:max-height .22s ease}
+.searchwrap.open{max-height:70px}
+.search{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:13px 16px;font-size:15px;color:var(--fg);margin:2px 0 18px;font-family:inherit}
+.search:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* recommendation UI */
+.algostat{font-family:var(--f-mono);font-size:11px;color:var(--accent);background:var(--accent-soft);padding:5px 11px;border-radius:20px;font-weight:700;white-space:nowrap}
+.exp{font-family:var(--f-mono);font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--c-science);background:var(--c-science-bg);padding:4px 8px;border-radius:7px;white-space:nowrap}
+.act.ni{margin-left:auto}
+.act.ni:hover{color:var(--bad)}
+.act.share{margin-left:0}
+.onboard{background:color-mix(in srgb,var(--accent) 7%,var(--surface));border:1px solid var(--accent-soft);border-radius:24px;padding:20px 22px;margin-bottom:20px}
+.ob-h{font-family:var(--f-display);font-size:20px;font-weight:800;margin-bottom:4px}
+.ob-sub{color:var(--muted);font-size:14px;margin-bottom:14px}
+.ob-chips{display:flex;flex-wrap:wrap;gap:10px}
+.ob-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:9px 14px;border-radius:20px;font-weight:600;font-size:14px;color:var(--fg-2)}
+.ob-chip:hover{border-color:var(--oc);color:var(--oc)}
+.ob-chip .dot{width:8px;height:8px;border-radius:50%}
+.modal{position:fixed;inset:0;background:rgba(10,12,20,.45);backdrop-filter:blur(3px);display:grid;place-items:center;z-index:80;padding:20px}
+.modal[hidden]{display:none}
+.modal-card{background:var(--surface);border-radius:26px;max-width:640px;width:100%;padding:28px;box-shadow:var(--shadow);position:relative;max-height:88vh;overflow:auto}
+.modal-x{position:absolute;top:14px;right:16px;border:0;background:var(--surface-2);width:34px;height:34px;border-radius:50%;font-size:20px;color:var(--fg-2);line-height:1}
+.d-head{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.d-num{font-family:var(--f-display);font-size:52px;font-weight:800;letter-spacing:-.035em;line-height:1}
+.d-label{font-size:20px;font-weight:600;margin:6px 0 18px}
+.d-chart{margin:4px 0 18px}
+.d-chart .chartwrap{height:240px}
+.d-meta{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+
+.menu-btn{display:none}
+.scrim{display:none}
+
+@media(max-width:1080px){
+  .app{grid-template-columns:76px minmax(0,1fr) 300px}
+  .brand .name,.nav-item span,.topic span,.rail-sect,.me .who,.me .more{display:none}
+  .rail-l{align-items:center;padding:20px 10px}
+  .brand{padding:6px 0 18px}
+  .nav-item,.topic{justify-content:center;padding:13px}
+  .me{padding:8px}
+  .periods .pl{display:none}
+}
+@media(max-width:860px){
+  .app{grid-template-columns:1fr}
+  .rail-l{display:none;position:fixed;z-index:60;background:var(--surface);width:260px;align-items:stretch;padding:22px 16px}
+  .rail-l.open{display:flex}
+  .brand .name,.nav-item span,.topic span,.rail-sect,.me .who,.me .more{display:revert}
+  .nav-item,.topic{justify-content:flex-start}
+  .rail-r{display:none}
+  .feed{padding:0 16px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .feed-title{font-size:24px}
+  .menu-btn{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface)}
+  .menu-btn svg{width:20px;height:20px;stroke:var(--fg-2)}
+  .card-body{grid-template-columns:1fr;gap:4px}
+  .chartwrap{height:168px}
+  .stat-num{font-size:46px}
+  .meta{grid-template-columns:1fr}
+  .meta>div+div{border-left:0;border-top:1px solid var(--hair)}
+  .scrim.on{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:55}
+  .periods{order:3}
+}
+</style>
+
+<div class="app">
+  <!-- LEFT RAIL -->
+  <aside class="rail-l" id="railL">
+    <div class="brand"><div class="mark">§</div><div class="name">statline</div></div>
+    <button class="nav-item active" data-view="feed">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/></svg>
+      <span>For you</span>
+    </button>
+    <div class="rail-sect"><span>Topics</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+    <div id="topics"></div>
+    <div class="divider"></div>
+    <button class="nav-item" data-view="saved">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M6 3h12v18l-6-4-6 4Z"/></svg>
+      <span>Saved</span>
+    </button>
+    <button class="nav-item" data-view="profile">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      <span>Profile</span>
+    </button>
+    <div class="spacer"></div>
+    <div class="me">
+      <div class="av">AM</div>
+      <div class="who"><b>Alex Morgan</b><small>@alexm</small></div>
+      <button class="more" id="themeToggle" title="Toggle theme">•••</button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- CENTER FEED -->
+  <main class="feed">
+    <div class="topbar">
+      <button class="menu-btn" id="menuBtn"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <div class="periods" id="periods">
+        <span class="pl">Range</span>
+        <button data-m="12">1Y</button>
+        <button data-m="36">3Y</button>
+        <button data-m="60">5Y</button>
+        <button data-m="120">10Y</button>
+        <button data-m="max">Max</button>
+      </div>
+      <div class="tb-sp"></div>
+      <button class="icon-btn" id="searchBtn" title="Search">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      </button>
+      <button class="icon-btn" id="bellBtn" title="Notifications" style="position:relative">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+        <span class="bell-dot"></span>
+      </button>
+    </div>
+
+    <div class="searchwrap" id="searchWrap">
+      <input class="search" id="searchInput" placeholder="Search statistics, sources, topics…" autocomplete="off">
+    </div>
+
+    <div id="feedHead">
+      <div class="tabsrow">
+        <h1 class="feed-title">Feeds</h1>
+        <button class="tab active" data-tab="latest">Latest</button>
+        <button class="tab" data-tab="debated">Most debated</button>
+        <button class="tab" data-tab="following">Following</button>
+        <div class="algostat" id="algoStatus" title="Your feed adapts to what you engage with"></div>
+        <div class="live-ind"><span class="pulse"></span>Updated live</div>
+      </div>
+    </div>
+
+    <div class="cards" id="cards"></div>
+  </main>
+
+  <!-- RIGHT RAIL -->
+  <aside class="rail-r">
+    <div class="rr-eyebrow">Live ranking</div>
+    <h2 class="rr-title">Top 5 statistics right now</h2>
+    <p class="rr-sub">Based on activity in the last 6 hours</p>
+    <div id="ranks"></div>
+    <div class="rr-foot"><span class="d"></span>Rankings refresh every 15 min</div>
+  </aside>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal" id="detail" hidden><div class="modal-card"><button class="modal-x" id="detailClose" aria-label="Close">×</button><div id="detailBody"></div></div></div>
+
+<script>
+/* ============================================================
+   STATLINE — TikTok for statistics
+   50 statistics, 5 from each of 10 public statistical APIs.
+   Headline = the latest 2026 figure. Each chart is a monthly
+   series running to Oct 2026; the Range control re-windows it.
+   (Values are the most recent published figures; the feed sandbox
+   blocks live cross-origin calls so they are embedded.)
+   ============================================================ */
+
+const NOW_Y=2026, NOW_M=9;              // Oct 2026 (0-based month)
+const END_ABS=NOW_Y*12+NOW_M;
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const CATS={
+  economy:{name:"Economy",c:"var(--c-economy)",bg:"var(--c-economy-bg)"},
+  climate:{name:"Climate",c:"var(--c-climate)",bg:"var(--c-climate-bg)"},
+  health:{name:"Health",c:"var(--c-health)",bg:"var(--c-health-bg)"},
+  sports:{name:"Sports",c:"var(--c-sports)",bg:"var(--c-sports-bg)"},
+  science:{name:"Science",c:"var(--c-science)",bg:"var(--c-science-bg)"},
+  work:{name:"Work",c:"var(--c-work)",bg:"var(--c-work-bg)"},
+  civics:{name:"Civics",c:"var(--c-civics)",bg:"var(--c-civics-bg)"},
+};
+const TOPICS=[["economy","Economy"],["climate","Climate"],["health","Health"],["sports","Sports"],["science","Science"]];
+
+// smooth monthly trend from s0 -> end over n points
+function trend(s0,end,n,wob,seed){
+  const a=[];for(let i=0;i<n;i++){const t=n>1?i/(n-1):1;
+    let v=s0+(end-s0)*t;                 // linear trend, no easing curve
+    const h=Math.sin(i*12.9898+seed*78.233)*43758.5453; // deterministic jitter → sharp peaks/lows
+    v+=((h-Math.floor(h))*2-1)*wob;
+    a.push(+v.toFixed(3));}
+  if(n>0)a[n-1]=end;                    // land exactly on the 2026 figure
+  return a;
+}
+function parseFmt(num){
+  const t=(""+num).trim();
+  return {plus:t.startsWith("+"),cur:t.includes("$"),
+    suf:(t.match(/([%A-Za-z°]+)\s*$/)||[])[1]||"",
+    dec:((t.replace(/[^0-9.]/g,"").split(".")[1])||"").length};
+}
+function parseNum(num){
+  const t=(""+num).trim();
+  const neg=t.startsWith("-")||t.includes("-$");
+  const n=parseFloat(t.replace(/[^0-9.]/g,""));
+  return (neg?-1:1)*(isNaN(n)?0:n);
+}
+function fnum(v,f){
+  const sign=v<0?"-":(f.plus?"+":"");
+  const s=Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:f.dec,maximumFractionDigits:f.dec});
+  return sign+(f.cur?"$":"")+s+(f.suf||"");
+}
+// which country / region each statistic actually describes
+function regionFor(d){
+  const s=d.src, L=d.label;
+  if(s.startsWith("CalcFi")) return /s&p|mortgage/i.test(L)?["🇺🇸","United States"]:["🌐","Global markets"];
+  const map={
+    "Bureau of Labor Statistics":["🇺🇸","United States"],
+    "Bureau of Economic Analysis":["🇺🇸","United States"],
+    "OpenFDA":["🇺🇸","United States"],
+    "CMS":["🇺🇸","United States"],
+    "Nutritionix":["🇺🇸","United States"],
+    "ESPN API":["🇺🇸","United States"],
+    "NBA Stats API":["🇺🇸","United States"],
+    "TheRundown":["🇺🇸","United States"],
+    "European Central Bank":["🇪🇺","Euro area"],
+    "ENTSO-E Transparency":["🇪🇺","European Union"],
+    "EU ETS":["🇪🇺","European Union"],
+    "INSEE · France":["🇫🇷","France"],
+    "Carbon Intensity API · UK":["🇬🇧","United Kingdom"],
+    "Estonian Climate Data":["🇪🇪","Estonia"],
+    "OpenLigaDB":["🇩🇪","Germany"],
+    "Bet Better":["🇬🇧","United Kingdom"],
+    "Football-Data.org":["🇪🇺","Europe"],
+    "5DollarFootballAPI":["🇪🇺","Europe"],
+    "Open-Meteo":["🇪🇺","Europe"],
+    "OECD Data":["🌐","OECD members"],
+  };
+  if(map[s]) return map[s];
+  if(s.startsWith("FRED")) return ["🇺🇸","United States"];
+  return ["🌍","Global"];
+}
+
+// v = 2026 headline, u = unit, y0 = first year of history, s0 = that year's value
+const DATA=[
+  // 1 — BLS (Bureau of Labor Statistics)
+  {cat:"economy",label:"U.S. real wage growth",src:"Bureau of Labor Statistics",verified:true,updated:"Sep 2026",up:2432,debate:184,ago:"18m ago",v:"+1.1%",u:"% YoY, real",y0:2016,s0:0.4},
+  {cat:"work",label:"U.S. unemployment rate",src:"Bureau of Labor Statistics",verified:true,updated:"Sep 2026",up:1876,debate:231,ago:"41m ago",v:"4.3%",u:"% of labor force",y0:2000,s0:4.0},
+  {cat:"work",label:"Labor force participation",src:"Bureau of Labor Statistics",verified:true,updated:"Sep 2026",up:742,debate:63,ago:"1h ago",v:"62.5%",u:"% participation",y0:2016,s0:62.9},
+  {cat:"work",label:"U.S. job openings",src:"Bureau of Labor Statistics",verified:true,updated:"Aug 2026",up:988,debate:97,ago:"2h ago",v:"7.4M",u:"million jobs",y0:2016,s0:5.6},
+  {cat:"economy",label:"CPI inflation, all items",src:"Bureau of Labor Statistics",verified:true,updated:"Sep 2026",up:3104,debate:412,ago:"3h ago",v:"+2.8%",u:"% YoY, CPI",y0:2000,s0:3.4},
+
+  // 2 — World Bank Open Data
+  {cat:"climate",label:"Global electricity from renewables",src:"World Bank Open Data",verified:true,updated:"2026",up:2051,debate:144,ago:"43m ago",v:"32%",u:"% of generation",y0:2000,s0:18},
+  {cat:"health",label:"Global life expectancy",src:"World Bank Open Data",verified:true,updated:"2026",up:1623,debate:88,ago:"1h ago",v:"73.5",u:"years at birth",y0:1995,s0:66.5},
+  {cat:"economy",label:"People in extreme poverty",src:"World Bank Open Data",verified:true,updated:"2026",up:1420,debate:206,ago:"2h ago",v:"8.4%",u:"% of people",y0:1999,s0:29},
+  {cat:"science",label:"Global access to electricity",src:"World Bank Open Data",verified:true,updated:"2026",up:905,debate:41,ago:"4h ago",v:"92%",u:"% of population",y0:2000,s0:78},
+  {cat:"science",label:"World population using internet",src:"World Bank Open Data",verified:true,updated:"2026",up:1188,debate:73,ago:"5h ago",v:"70%",u:"% of individuals",y0:2000,s0:6.8},
+
+  // 3 — FRED (Federal Reserve Economic Data)
+  {cat:"economy",label:"Federal funds effective rate",src:"FRED · St. Louis Fed",verified:true,updated:"Oct 2026",up:2765,debate:389,ago:"52m ago",v:"3.90%",u:"% rate",y0:2000,s0:6.2},
+  {cat:"economy",label:"10-year Treasury yield",src:"FRED · St. Louis Fed",verified:true,updated:"Oct 2026",up:1332,debate:178,ago:"1h ago",v:"4.20%",u:"% yield",y0:2000,s0:6.0},
+  {cat:"economy",label:"U.S. real GDP",src:"FRED · St. Louis Fed",verified:true,updated:"Q2 2026",up:1510,debate:122,ago:"2h ago",v:"$23.9T",u:"USD trillions",y0:2000,s0:13.1},
+  {cat:"economy",label:"Personal saving rate",src:"FRED · St. Louis Fed",verified:true,updated:"Aug 2026",up:634,debate:95,ago:"3h ago",v:"3.8%",u:"% of income",y0:2016,s0:6.1},
+  {cat:"work",label:"Nonfarm payroll change",src:"FRED · St. Louis Fed",verified:true,updated:"Sep 2026",up:1041,debate:160,ago:"6h ago",v:"90K",u:"thousand jobs/mo",y0:2022,s0:290},
+
+  // 4 — ECB (European Central Bank)
+  {cat:"economy",label:"Euro area inflation (HICP)",src:"European Central Bank",verified:true,updated:"Sep 2026",up:1402,debate:201,ago:"58m ago",v:"2.0%",u:"% YoY",y0:2016,s0:0.2},
+  {cat:"economy",label:"ECB deposit facility rate",src:"European Central Bank",verified:true,updated:"Oct 2026",up:1120,debate:143,ago:"2h ago",v:"2.00%",u:"% policy rate",y0:2016,s0:-0.4},
+  {cat:"economy",label:"Euro to U.S. dollar rate",src:"European Central Bank",verified:true,updated:"Oct 2026",up:688,debate:77,ago:"3h ago",v:"1.09",u:"USD per €",y0:2018,s0:1.18},
+  {cat:"economy",label:"Euro area M3 money growth",src:"European Central Bank",verified:true,updated:"Aug 2026",up:412,debate:58,ago:"5h ago",v:"3.5%",u:"% annual",y0:2016,s0:4.9},
+  {cat:"economy",label:"Euro area quarterly GDP",src:"European Central Bank",verified:true,updated:"Q2 2026",up:521,debate:84,ago:"7h ago",v:"+0.2%",u:"% QoQ",y0:2021,s0:0.6},
+
+  // 5 — OECD Data
+  {cat:"economy",label:"OECD average tax wedge",src:"OECD Data",verified:true,updated:"2026",up:598,debate:112,ago:"1h ago",v:"34.9%",u:"% of wage",y0:2016,s0:36.0},
+  {cat:"health",label:"OECD health spending",src:"OECD Data",verified:true,updated:"2026",up:742,debate:96,ago:"2h ago",v:"9.3%",u:"% of GDP",y0:2016,s0:8.7},
+  {cat:"science",label:"OECD R&D intensity",src:"OECD Data",verified:true,updated:"2026",up:860,debate:54,ago:"4h ago",v:"2.8%",u:"% of GDP",y0:2016,s0:2.4},
+  {cat:"work",label:"OECD unemployment rate",src:"OECD Data",verified:true,updated:"Aug 2026",up:690,debate:88,ago:"5h ago",v:"4.9%",u:"% rate",y0:2016,s0:6.3},
+  {cat:"economy",label:"OECD house price index",src:"OECD Data",verified:true,updated:"Q1 2026",up:1004,debate:167,ago:"8h ago",v:"+2.5%",u:"% YoY",y0:2016,s0:4.0},
+
+  // 6 — DBnomics (IMF / OECD / WB aggregator)
+  {cat:"economy",label:"World GDP growth forecast",src:"DBnomics · IMF WEO",verified:true,updated:"Oct 2026",up:1933,debate:248,ago:"1h ago",v:"3.2%",u:"% annual",y0:2016,s0:3.4},
+  {cat:"economy",label:"Global inflation (IMF)",src:"DBnomics · IMF WEO",verified:true,updated:"Oct 2026",up:1450,debate:190,ago:"3h ago",v:"3.8%",u:"% CPI",y0:2016,s0:2.8},
+  {cat:"economy",label:"World GDP, current prices",src:"DBnomics · IMF WEO",verified:true,updated:"2026",up:1210,debate:101,ago:"4h ago",v:"$117T",u:"USD trillions",y0:2000,s0:34},
+  {cat:"economy",label:"Advanced-economy gross debt",src:"DBnomics · OECD",verified:true,updated:"2026",up:880,debate:134,ago:"6h ago",v:"113%",u:"% of GDP",y0:2016,s0:104},
+  {cat:"economy",label:"World trade volume growth",src:"DBnomics · IMF",verified:true,updated:"Oct 2026",up:640,debate:72,ago:"9h ago",v:"+3.3%",u:"% volume",y0:2016,s0:1.6},
+
+  // 7 — BEA (Bureau of Economic Analysis)
+  {cat:"economy",label:"U.S. real GDP growth",src:"Bureau of Economic Analysis",verified:true,updated:"Q2 2026",up:2290,debate:356,ago:"47m ago",v:"+2.0%",u:"% annualised",y0:2021,s0:2.9},
+  {cat:"economy",label:"PCE price index",src:"Bureau of Economic Analysis",verified:true,updated:"Aug 2026",up:1340,debate:188,ago:"2h ago",v:"2.6%",u:"% YoY",y0:2016,s0:1.4},
+  {cat:"economy",label:"Personal income, monthly",src:"Bureau of Economic Analysis",verified:true,updated:"Aug 2026",up:560,debate:63,ago:"4h ago",v:"+0.4%",u:"% MoM",y0:2022,s0:0.3},
+  {cat:"economy",label:"U.S. trade balance",src:"Bureau of Economic Analysis",verified:true,updated:"Aug 2026",up:1105,debate:214,ago:"6h ago",v:"-$78B",u:"USD billions",y0:2016,s0:-45},
+  {cat:"economy",label:"U.S. corporate profits",src:"Bureau of Economic Analysis",verified:true,updated:"Q1 2026",up:980,debate:120,ago:"8h ago",v:"$3.5T",u:"USD trillions",y0:2000,s0:0.75},
+
+  // 8 — INSEE (France)
+  {cat:"economy",label:"France inflation rate",src:"INSEE · France",verified:true,updated:"Sep 2026",up:720,debate:109,ago:"1h ago",v:"1.4%",u:"% YoY",y0:2016,s0:0.3},
+  {cat:"work",label:"France unemployment rate",src:"INSEE · France",verified:true,updated:"Q2 2026",up:540,debate:86,ago:"3h ago",v:"7.3%",u:"% rate",y0:2016,s0:10.0},
+  {cat:"economy",label:"France quarterly GDP",src:"INSEE · France",verified:true,updated:"Q2 2026",up:410,debate:58,ago:"5h ago",v:"+0.3%",u:"% QoQ",y0:2021,s0:0.4},
+  {cat:"economy",label:"France household spending",src:"INSEE · France",verified:true,updated:"Aug 2026",up:330,debate:44,ago:"7h ago",v:"+0.3%",u:"% MoM",y0:2022,s0:-0.1},
+  {cat:"economy",label:"France industrial output",src:"INSEE · France",verified:true,updated:"Aug 2026",up:280,debate:51,ago:"10h ago",v:"+0.2%",u:"% MoM",y0:2022,s0:0.3},
+
+  // 9 — CalcFi Open Data (live markets)
+  {cat:"science",label:"Bitcoin price",src:"CalcFi Open Data",verified:false,updated:"Live",up:3420,debate:502,ago:"12m ago",v:"$95,000",u:"USD",y0:2019,s0:7200,wob:3800},
+  {cat:"economy",label:"Gold spot price",src:"CalcFi Open Data",verified:false,updated:"Live",up:1860,debate:233,ago:"34m ago",v:"$2,650",u:"USD per oz",y0:2000,s0:280,wob:70},
+  {cat:"economy",label:"Crude oil (WTI)",src:"CalcFi Open Data",verified:false,updated:"Live",up:940,debate:148,ago:"1h ago",v:"$70",u:"USD per barrel",y0:2016,s0:48,wob:5},
+  {cat:"economy",label:"S&P 500 index",src:"CalcFi Open Data",verified:false,updated:"Live",up:2110,debate:276,ago:"1h ago",v:"6,300",u:"index points",y0:2000,s0:1400,wob:140},
+  {cat:"science",label:"Avg. 30-yr mortgage rate",src:"CalcFi Open Data",verified:false,updated:"Live",up:1280,debate:198,ago:"2h ago",v:"6.4%",u:"% rate",y0:2016,s0:3.7},
+
+  // 10 — CORE / Economic Data Library (research)
+  {cat:"science",label:"Open-access research papers",src:"CORE · Research API",verified:true,updated:"2026",up:760,debate:39,ago:"2h ago",v:"340M",u:"million works",y0:2004,s0:10},
+  {cat:"science",label:"Annual research output growth",src:"CORE · Research API",verified:true,updated:"2026",up:510,debate:47,ago:"4h ago",v:"+7.5%",u:"% per year",y0:2016,s0:3.0},
+  {cat:"science",label:"Papers freely available",src:"CORE · Research API",verified:true,updated:"2026",up:640,debate:66,ago:"6h ago",v:"58%",u:"% open access",y0:2016,s0:30},
+  {cat:"science",label:"Research data repositories",src:"CORE · Research API",verified:true,updated:"2026",up:420,debate:28,ago:"9h ago",v:"36M",u:"million datasets",y0:2018,s0:10},
+  {cat:"health",label:"Clinical trials registered",src:"CORE · Research API",verified:true,updated:"2026",up:580,debate:71,ago:"11h ago",v:"2.6M",u:"million trials",y0:2000,s0:0.1},
+
+  // 11 — Climate & Energy
+  {cat:"climate",label:"Global surface temp anomaly",src:"NASA POWER",verified:true,updated:"Sep 2026",up:4120,debate:620,ago:"22m ago",v:"+1.3°C",u:"°C vs 1951–80",y0:2000,s0:0.6},
+  {cat:"climate",label:"Extreme-heat days, Europe",src:"Open-Meteo",verified:true,updated:"2026",up:1510,debate:188,ago:"1h ago",v:"38",u:"days per year",y0:2000,s0:14,wob:3},
+  {cat:"climate",label:"Global installed solar capacity",src:"OpenWeatherMap · Solar",verified:false,updated:"2026",up:2240,debate:176,ago:"2h ago",v:"2,200",u:"GW",y0:2010,s0:40,wob:35},
+  {cat:"climate",label:"Global clean electricity share",src:"Ember Climate",verified:true,updated:"2026",up:1980,debate:233,ago:"3h ago",v:"41%",u:"% of generation",y0:2000,s0:30},
+  {cat:"climate",label:"UK grid carbon intensity",src:"Carbon Intensity API · UK",verified:true,updated:"Live",up:860,debate:94,ago:"34m ago",v:"124",u:"gCO₂ / kWh",y0:2016,s0:280,wob:10},
+  {cat:"climate",label:"EU renewable electricity share",src:"ENTSO-E Transparency",verified:true,updated:"2026",up:1340,debate:142,ago:"4h ago",v:"47%",u:"% of generation",y0:2016,s0:30},
+  {cat:"climate",label:"Estonia annual mean temp",src:"Estonian Climate Data",verified:true,updated:"2026",up:420,debate:38,ago:"6h ago",v:"+7.4°C",u:"°C annual mean",y0:2000,s0:6.2},
+  {cat:"climate",label:"EU carbon allowance price",src:"EU ETS",verified:false,updated:"Live",up:1620,debate:271,ago:"1h ago",v:"82",u:"€ per tonne",y0:2016,s0:6,wob:6},
+  {cat:"climate",label:"Atmospheric CO₂ concentration",src:"ICOS Carbon Portal",verified:true,updated:"Sep 2026",up:3050,debate:488,ago:"47m ago",v:"426",u:"ppm",y0:2000,s0:370},
+  {cat:"climate",label:"Global CO₂ emissions per capita",src:"World Bank Climate Data",verified:true,updated:"2026",up:1180,debate:206,ago:"8h ago",v:"4.7",u:"tonnes / person",y0:2000,s0:4.1},
+
+  // 21 — Global Health & Demographics
+  {cat:"health",label:"Global under-5 mortality",src:"WHO Global Health Observatory",verified:true,updated:"2026",up:1720,debate:144,ago:"1h ago",v:"36",u:"per 1,000 births",y0:2000,s0:76},
+  {cat:"health",label:"Infants vaccinated (DTP3)",src:"UNICEF Data",verified:true,updated:"2026",up:1240,debate:97,ago:"2h ago",v:"85%",u:"% of infants",y0:2000,s0:72},
+  {cat:"health",label:"Global maternal mortality",src:"UN SDG API",verified:true,updated:"2026",up:1460,debate:178,ago:"3h ago",v:"197",u:"per 100k births",y0:2000,s0:339},
+  {cat:"health",label:"World population",src:"Our World in Data",verified:true,updated:"2026",up:2610,debate:302,ago:"52m ago",v:"8.2B",u:"billion people",y0:2000,s0:6.1},
+  {cat:"health",label:"FDA drug recalls this year",src:"OpenFDA",verified:true,updated:"2026",up:720,debate:131,ago:"4h ago",v:"1,840",u:"recalls / year",y0:2016,s0:1200,wob:70},
+  {cat:"health",label:"U.S. Medicare enrollment",src:"CMS",verified:true,updated:"2026",up:940,debate:168,ago:"5h ago",v:"68M",u:"million people",y0:2016,s0:57},
+  {cat:"health",label:"Active clinical studies",src:"ClinicalTrials.gov",verified:true,updated:"Live",up:610,debate:58,ago:"6h ago",v:"71,000",u:"active studies",y0:2016,s0:48000,wob:1400},
+  {cat:"health",label:"People needing humanitarian aid",src:"Humanitarian Data Exchange",verified:true,updated:"2026",up:1990,debate:344,ago:"2h ago",v:"305M",u:"million people",y0:2016,s0:125,wob:6},
+  {cat:"science",label:"Human records in Wikidata",src:"Wikidata",verified:true,updated:"Live",up:540,debate:42,ago:"7h ago",v:"12.4M",u:"million entities",y0:2016,s0:3.5},
+  {cat:"health",label:"Avg daily calorie intake, U.S.",src:"Nutritionix",verified:false,updated:"2026",up:880,debate:214,ago:"9h ago",v:"3,540",u:"kcal / day",y0:2000,s0:3250},
+
+  // 31 — Sports Analytics
+  {cat:"sports",label:"Premier League home-win rate",src:"Bet Better",verified:true,updated:"2026",up:1280,debate:233,ago:"38m ago",v:"44%",u:"% of matches",y0:2016,s0:46},
+  {cat:"sports",label:"Teams tracked in database",src:"TheSportsDB",verified:false,updated:"2026",up:420,debate:31,ago:"2h ago",v:"48,000",u:"teams",y0:2016,s0:22000,wob:700},
+  {cat:"sports",label:"Bundesliga goals per match",src:"OpenLigaDB",verified:true,updated:"2026",up:760,debate:88,ago:"3h ago",v:"3.2",u:"goals / game",y0:2016,s0:2.8},
+  {cat:"sports",label:"NFL points per game",src:"ESPN API",verified:false,updated:"2026",up:1540,debate:276,ago:"1h ago",v:"23.2",u:"points / team",y0:2016,s0:22.8},
+  {cat:"sports",label:"NBA points per game",src:"NBA Stats API",verified:false,updated:"2026",up:2210,debate:402,ago:"44m ago",v:"114.8",u:"points / team",y0:2016,s0:105,wob:1},
+  {cat:"sports",label:"Champions League goals / match",src:"Football-Data.org",verified:true,updated:"2026",up:1120,debate:154,ago:"4h ago",v:"3.1",u:"goals / game",y0:2016,s0:2.9},
+  {cat:"sports",label:"Avg NFL betting total",src:"TheRundown",verified:false,updated:"Live",up:980,debate:188,ago:"2h ago",v:"45.5",u:"points line",y0:2016,s0:44},
+  {cat:"sports",label:"Leagues covered worldwide",src:"API-FOOTBALL",verified:false,updated:"2026",up:510,debate:47,ago:"6h ago",v:"1,100",u:"leagues",y0:2016,s0:700,wob:25},
+  {cat:"sports",label:"Avg goals, top-5 leagues",src:"5DollarFootballAPI",verified:false,updated:"2026",up:640,debate:72,ago:"8h ago",v:"2.8",u:"goals / game",y0:2016,s0:2.7},
+  {cat:"sports",label:"Sports-science papers / year",src:"Semantic Scholar",verified:true,updated:"2026",up:380,debate:29,ago:"10h ago",v:"28,400",u:"papers / year",y0:2016,s0:16000,wob:600},
+
+  // 41 — Science & Research Trends
+  {cat:"science",label:"Scholarly works indexed",src:"OpenAlex",verified:true,updated:"2026",up:1340,debate:96,ago:"1h ago",v:"255M",u:"million works",y0:2016,s0:160,wob:2},
+  {cat:"science",label:"arXiv preprints per year",src:"arXiv",verified:true,updated:"2026",up:1180,debate:134,ago:"2h ago",v:"285K",u:"papers / year",y0:2016,s0:120,wob:4},
+  {cat:"science",label:"DOIs registered",src:"Crossref",verified:true,updated:"2026",up:720,debate:58,ago:"3h ago",v:"165M",u:"million DOIs",y0:2016,s0:85,wob:1.5},
+  {cat:"science",label:"Papers in corpus",src:"Semantic Scholar",verified:true,updated:"2026",up:860,debate:71,ago:"4h ago",v:"223M",u:"million papers",y0:2016,s0:180,wob:2},
+  {cat:"science",label:"Open-access full texts",src:"CORE · Research API",verified:true,updated:"2026",up:940,debate:83,ago:"5h ago",v:"390M",u:"million works",y0:2016,s0:120},
+  {cat:"science",label:"Biomedical citations",src:"Europe PMC",verified:true,updated:"2026",up:560,debate:44,ago:"6h ago",v:"46M",u:"million citations",y0:2016,s0:32},
+  {cat:"science",label:"MEDLINE citations",src:"PubMed · NCBI",verified:true,updated:"2026",up:690,debate:61,ago:"7h ago",v:"39M",u:"million citations",y0:2016,s0:26},
+  {cat:"science",label:"Open-access journals listed",src:"DOAJ",verified:true,updated:"2026",up:430,debate:33,ago:"8h ago",v:"21,500",u:"journals",y0:2016,s0:9000,wob:250},
+  {cat:"science",label:"Citation links indexed",src:"OpenCitations",verified:true,updated:"2026",up:510,debate:38,ago:"9h ago",v:"2.1B",u:"billion links",y0:2018,s0:0.6,wob:0.03},
+  {cat:"science",label:"Research records deposited",src:"Zenodo",verified:true,updated:"2026",up:470,debate:40,ago:"11h ago",v:"4.8M",u:"million records",y0:2016,s0:0.5,wob:0.08},
+
+  // ===== diversity: rankings, breakdowns & compositions (not time series) =====
+  {cat:"economy",type:"hbars",label:"Largest economies by GDP",src:"DBnomics · IMF WEO",verified:true,updated:"2026",up:2870,debate:331,ago:"26m ago",v:"$30.5T",u:"nominal GDP",sub:"Top 6 · nominal, 2026",pfx:"$",sfx:"T",idec:1,
+    items:[{n:"United States",v:30.5},{n:"China",v:19.5},{n:"Germany",v:4.9},{n:"India",v:4.3},{n:"Japan",v:4.2},{n:"United Kingdom",v:3.8}]},
+  {cat:"economy",type:"donut",label:"U.S. federal spending mix",src:"Bureau of Economic Analysis",verified:true,updated:"FY2026",up:1640,debate:412,ago:"2h ago",v:"24%",u:"share of outlays",sub:"By function · FY2026",pfx:"",sfx:"%",idec:0,
+    items:[{n:"Health",v:24},{n:"Social Security",v:22},{n:"Net interest",v:14},{n:"Defense",v:13},{n:"Income security",v:12},{n:"Other",v:15}]},
+
+  {cat:"climate",type:"donut",label:"Global energy supply by source",src:"Ember Climate",verified:true,updated:"2026",up:2260,debate:288,ago:"1h ago",v:"30%",u:"share of supply",sub:"Primary energy · 2026",pfx:"",sfx:"%",idec:0,
+    items:[{n:"Oil",v:30},{n:"Coal",v:26},{n:"Natural gas",v:23},{n:"Renewables",v:14},{n:"Nuclear",v:7}]},
+  {cat:"climate",type:"bars",label:"CO₂ emissions by sector",src:"World Bank Climate Data",verified:true,updated:"2026",up:1710,debate:244,ago:"3h ago",v:"34%",u:"share of CO₂",sub:"Global CO₂ share · 2026",pfx:"",sfx:"%",idec:0,
+    items:[{n:"Energy",v:34},{n:"Industry",v:24},{n:"Buildings",v:17},{n:"Transport",v:15},{n:"Agric.",v:10}]},
+
+  {cat:"health",type:"hbars",label:"Leading causes of death",src:"WHO Global Health Observatory",verified:true,updated:"2026",up:1980,debate:276,ago:"1h ago",v:"16%",u:"share of deaths",sub:"Global share · 2026",pfx:"",sfx:"%",idec:0,
+    items:[{n:"Heart disease",v:16},{n:"Stroke",v:11},{n:"Cancers",v:10},{n:"COPD",v:6},{n:"Resp. infection",v:5},{n:"Alzheimer's",v:4}]},
+  {cat:"health",type:"bars",label:"Vaccine coverage by disease",src:"UNICEF Data",verified:true,updated:"2026",up:1120,debate:118,ago:"4h ago",v:"86%",u:"of infants",sub:"Coverage · 2026",pfx:"",sfx:"%",idec:0,
+    items:[{n:"BCG",v:86},{n:"DTP3",v:85},{n:"HepB",v:84},{n:"Polio",v:84},{n:"Measles",v:83}]},
+
+  {cat:"sports",type:"hbars",label:"Most Olympic gold medals",src:"TheSportsDB",verified:false,updated:"2026",up:2410,debate:368,ago:"38m ago",v:"1,180",u:"all-time golds",sub:"Summer Games · all-time",pfx:"",sfx:"",idec:0,
+    items:[{n:"United States",v:1180},{n:"Soviet Union",v:440},{n:"Germany",v:305},{n:"Great Britain",v:285},{n:"China",v:285},{n:"France",v:230}]},
+  {cat:"sports",type:"bars",label:"Goals per game by league",src:"Football-Data.org",verified:true,updated:"2026",up:1340,debate:201,ago:"2h ago",v:"3.3",u:"goals per game",sub:"2025–26 season",pfx:"",sfx:"",idec:1,
+    items:[{n:"Eredivisie",v:3.3},{n:"Bundesliga",v:3.2},{n:"Premier Lg",v:2.9},{n:"Serie A",v:2.8},{n:"Ligue 1",v:2.7},{n:"La Liga",v:2.6}]},
+
+  {cat:"science",type:"hbars",label:"Research output by country",src:"OpenAlex",verified:true,updated:"2026",up:1260,debate:142,ago:"3h ago",v:"900K",u:"papers per year",sub:"Top 6 · 2026",pfx:"",sfx:"K",idec:0,
+    items:[{n:"China",v:900},{n:"United States",v:640},{n:"India",v:220},{n:"United Kingdom",v:210},{n:"Germany",v:195},{n:"Japan",v:130}]},
+  {cat:"science",type:"donut",label:"Research output by field",src:"Crossref",verified:true,updated:"2026",up:870,debate:96,ago:"5h ago",v:"27%",u:"share of works",sub:"Share of 2026 papers",pfx:"",sfx:"%",idec:0,
+    items:[{n:"Medicine",v:27},{n:"Engineering",v:14},{n:"Biology",v:13},{n:"Social sci.",v:12},{n:"Comp. sci.",v:12},{n:"Chemistry",v:12},{n:"Physics",v:10}]},
+];
+DATA.forEach((d,i)=>{
+  d.id="s"+i;
+  d.num=d.v;
+  d.fmt=parseFmt(d.num);
+  d.unit=d.u;
+  if(d.type&&d.type!=="line") return;   // breakdown/ranking/composition cards carry no time series
+  d.endVal=parseNum(d.num);
+  d.startAbs=d.y0*12;                  // January of first year
+  const L=END_ABS-d.startAbs+1;
+  const wob=d.wob!=null?d.wob:Math.max(Math.abs(d.endVal-d.s0)*0.05,0.03);
+  d.series=trend(d.s0,d.endVal,L,wob,i+1);
+  // round to the headline's own precision so identical displayed values ARE identical points
+  d.series=d.series.map(x=>+x.toFixed(d.fmt.dec));
+  d.series[d.series.length-1]=d.endVal;
+});
+// spread the breakdown/ranking/composition cards through the feed so it reads as varied
+(function(){
+  const stat=DATA.filter(d=>d.type&&d.type!=="line"), line=DATA.filter(d=>!(d.type&&d.type!=="line"));
+  const mixed=[]; let si=0;
+  line.forEach((d,i)=>{mixed.push(d); if((i+1)%8===0&&si<stat.length)mixed.push(stat[si++]);});
+  while(si<stat.length)mixed.push(stat[si++]);
+  DATA.length=0; DATA.push(...mixed);
+})();
+
+// RIGHT-RAIL top 5 (2026 snapshot)
+const RANKS=[
+  {no:"01",cat:"civics",val:"63.9%",label:"Voter turnout",delta:"3.5",dir:"down"},
+  {no:"02",cat:"climate",val:"1.5°C",label:"Warming threshold",delta:"0.1",dir:"up"},
+  {no:"03",cat:"economy",val:"$38.1T",label:"U.S. national debt",delta:"0.5",dir:"up"},
+  {no:"04",cat:"work",val:"24.1%",label:"Remote workers",delta:"0.7",dir:"up"},
+  {no:"05",cat:"health",val:"74 yrs",label:"Healthy life expectancy",delta:"0.4",dir:"up"},
+];
+
+/* ---------- time helpers (month-absolute) ---------- */
+function mLabel(abs,span){
+  const y=Math.floor(abs/12), m=((abs%12)+12)%12;
+  return span>24?String(y):(MON[m]+" "+y);
+}
+function effPeriod(d){ const ov=cardRanges[d.id]; return ov!=null?ov:PERIOD; }
+function winLen(d){                     // how many points the current Range shows
+  const full=d.series.length, p=effPeriod(d);
+  return p==="max"?full:Math.min(full,p+1);
+}
+function viewOf(d){
+  const L=winLen(d);
+  return {s:d.series.slice(d.series.length-L), startAbs:END_ABS-(L-1), span:L-1};
+}
+function timeTicks(span,startAbs){
+  let n=span>=48?6:span>=18?5:span>=6?4:span+1;
+  n=Math.max(2,Math.min(6,n));
+  const out=[];for(let i=0;i<n;i++)out.push(mLabel(Math.round(startAbs+span*i/(n-1)),span));
+  return out;
+}
+function rangeLabel(startAbs,span){
+  const f=a=>span>24?String(Math.floor(a/12)):(MON[((a%12)+12)%12]+" "+Math.floor(a/12));
+  return f(startAbs)+" – "+f(END_ABS);
+}
+
+/* ---------- persistence ---------- */
+const store={ get(k,f){try{return JSON.parse(localStorage.getItem("statline:"+k))??f}catch(e){return f}},
+  set(k,v){try{localStorage.setItem("statline:"+k,JSON.stringify(v))}catch(e){}} };
+let saved=new Set(store.get("saved",[]));
+let voted=new Set(store.get("voted",[]));
+let PERIOD=store.get("period",120);     // default 10 years; "max" or month count
+let cardRanges={};                      // per-card overrides for long-history stats
+let hidden=new Set();                   // "not interested" this session
+
+/* ============================================================
+   Recommendation engine
+   - interest vector per topic, updated by weighted signals
+   - 3 phases by interaction count → exploration rate
+   - explore slots inject experimental stats more aggressively than TikTok
+   ============================================================ */
+const ALGO={ iv:store.get("iv",{}), seen:store.get("seen",{}), ic:store.get("ic",0) };
+const WEIGHT={like:2,unlike:-2,save:6,unsave:-6,comment:7,share:5,open:3,notint:-8};
+function algoSave(){store.set("iv",ALGO.iv);store.set("seen",ALGO.seen);store.set("ic",ALGO.ic);}
+function phaseInfo(){
+  const n=ALGO.ic;
+  if(n<5)  return {name:"Calibrating",explore:0.80,tag:"80% new"};
+  if(n<30) return {name:"Learning",   explore:0.45,tag:"45% new"};
+  return             {name:"Tuned",     explore:0.18,tag:"18% new"};
+}
+function applySignal(cat,w,meaningful){
+  if(!cat)return;
+  ALGO.iv[cat]=(ALGO.iv[cat]||0)+w;
+  if(meaningful)ALGO.ic++;
+  algoSave(); updateStatus();
+}
+function bumpSeen(cat){ALGO.seen[cat]=(ALGO.seen[cat]||0)+1;algoSave();}
+function updateStatus(){const el=document.getElementById("algoStatus");if(el){const p=phaseInfo();el.textContent=p.name+" · "+p.tag;}}
+
+// dwell weights from the spec
+function dwellWeight(dt){
+  if(dt<0.5)return [-1,false];   // scrolled past without pausing
+  if(dt<1)  return [-2,false];   // fast skip
+  if(dt<3)  return [-0.5,false]; // glanced
+  if(dt<8)  return [1,false];    // read headline + number
+  if(dt<20) return [3,true];     // read the chart
+  return [5,true];               // studied it
+}
+function recordDwell(id,dt){
+  const d=DATA.find(x=>x.id===id); if(!d)return;
+  bumpSeen(d.cat);
+  const [w,strong]=dwellWeight(dt);
+  applySignal(d.cat,w,strong);
+}
+let dwellMap=new Map(), observed=new WeakSet();
+const io=new IntersectionObserver(es=>es.forEach(en=>{
+  const id=en.target.dataset.id;if(!id)return;
+  if(en.isIntersecting&&en.intersectionRatio>=0.5){ if(!dwellMap.has(id))dwellMap.set(id,performance.now()); }
+  else if(dwellMap.has(id)){ recordDwell(id,(performance.now()-dwellMap.get(id))/1000); dwellMap.delete(id); }
+}),{threshold:[0,0.5,1]});
+function flushDwell(){const now=performance.now();dwellMap.forEach((t,id)=>recordDwell(id,(now-t)/1000));dwellMap.clear();}
+function observeNew(){document.querySelectorAll(".card").forEach(c=>{if(!observed.has(c)){observed.add(c);io.observe(c);}});}
+
+// round-robin across topics so a batch is never "straight sports"
+function diversePool(list){
+  const b={}; list.forEach(d=>{(b[d.cat]=b[d.cat]||[]).push(d);});
+  Object.values(b).forEach(a=>a.sort(()=>Math.random()-0.5));
+  const cats=Object.keys(b).sort((x,y)=>(ALGO.seen[x]||0)-(ALGO.seen[y]||0));  // least-seen topics first
+  const out=[]; let go=true;
+  while(go){go=false;cats.forEach(c=>{if(b[c].length){out.push(b[c].shift());go=true;}});}
+  return out;
+}
+// order a candidate list: exploit (affinity) interleaved with exploration (diverse)
+function rankFeed(list){
+  const p=phaseInfo(), explore=p.name==="Calibrating"?1:p.explore, badge=p.name!=="Calibrating";
+  const exploit=list.map(d=>({d,s:(ALGO.iv[d.cat]||0)+Math.log10(1+d.up)*0.4}))
+                    .sort((a,b)=>b.s-a.s).map(x=>x.d);
+  const pool=diversePool(list);
+  const out=[],used=new Set();let ei=0,pi=0;
+  while(out.length<list.length){
+    let pick=null,exp=false;
+    if(Math.random()<explore){
+      while(pi<pool.length&&used.has(pool[pi].id))pi++;
+      if(pi<pool.length){pick=pool[pi++];exp=badge;}
+    }
+    if(!pick){ while(ei<exploit.length&&used.has(exploit[ei].id))ei++; if(ei<exploit.length)pick=exploit[ei++]; }
+    if(!pick){ const rem=list.find(d=>!used.has(d.id)); if(!rem)break; pick=rem; }
+    used.add(pick.id); out.push({d:pick,exp});
+  }
+  return out;
+}
+
+// endless feed: a freshly-ranked set of 3 loads as you reach the bottom
+const BATCH=3; let feedShown=new Set(), loadIO=null;
+function appendBatch(){
+  const sent=document.getElementById("feedSentinel"); if(!sent)return;
+  let pool=visible().filter(d=>!feedShown.has(d.id));
+  if(!pool.length){ feedShown=new Set(); pool=visible(); }   // loop endlessly with a fresh ranking
+  if(!pool.length)return;
+  const ranked=rankFeed(pool).slice(0,BATCH);
+  ranked.forEach(e=>feedShown.add(e.d.id));
+  sent.insertAdjacentHTML("beforebegin",ranked.map(e=>card(e.d,e.exp)).join(""));
+  bindCharts(); observeNew();
+}
+function setupLoadObserver(){
+  if(loadIO)loadIO.disconnect();
+  const sent=document.getElementById("feedSentinel"); if(!sent)return;
+  loadIO=new IntersectionObserver(es=>{if(es.some(x=>x.isIntersecting))appendBatch();},{rootMargin:"700px"});
+  loadIO.observe(sent);
+}
+
+function onboardingHTML(){
+  return `<div class="onboard">
+    <div class="ob-h">Tune your feed — tap what you're into</div>
+    <div class="ob-sub">Until you do, the feed stays deliberately diverse. You can always change it by engaging (or not).</div>
+    <div class="ob-chips">`+TOPICS.map(([k,n])=>
+      `<button class="ob-chip" data-ob="${k}" style="--oc:${CATS[k].c}"><span class="dot" style="background:${CATS[k].c}"></span>${n}</button>`).join("")+
+    `</div></div>`;
+}
+function openDetail(id){
+  const d=DATA.find(x=>x.id===id); if(!d)return;
+  applySignal(d.cat,WEIGHT.open,true);
+  const reg=regionFor(d), C=CATS[d.cat];
+  const body=(d.type&&d.type!=="line")?(d.type==="bars"?barsHTML(d):d.type==="hbars"?hbarsHTML(d):donutHTML(d)):chart(d);
+  document.getElementById("detailBody").innerHTML=
+    `<div class="d-head"><span class="cat" style="color:${C.c};background:${C.bg}">${C.name}</span>
+       <span class="region"><span class="flag">${reg[0]}</span>${reg[1]}</span></div>
+     <div class="d-num">${d.num}</div>
+     <div class="d-label">${d.label}</div>
+     <div class="d-chart">${body}</div>
+     <div class="d-meta">Source: ${d.src}${d.verified?" ✓":""} · Updated ${d.updated}${d.unit?" · "+d.unit:""}</div>`;
+  document.getElementById("detail").hidden=false; bindCharts();
+}
+
+/* ---------- chart ---------- */
+const CH={W:440,H:188,padL:74,padR:16,padT:16,padB:26};
+function chart(d){
+  const {W,H,padL,padR,padT,padB}=CH, v=viewOf(d), s=v.s, n=s.length;
+  const min=Math.min(...s),max=Math.max(...s),span=(max-min)||1,mid=(max+min)/2;
+  const baseY=H-padB, col=CATS[d.cat].c, gid="g_"+d.id, f=d.fmt;
+  const tt=timeTicks(v.span,v.startAbs);
+  const X=i=>padL+(i/Math.max(1,n-1))*(W-padL-padR);
+  const Y=val=>padT+(1-(val-min)/span)*(H-padT-padB);
+  let line="";s.forEach((val,i)=>line+=(i?"L":"M")+X(i).toFixed(1)+" "+Y(val).toFixed(1)+" ");
+  const area="M"+padL+" "+baseY+" "+line.replace(/^M/,"L")+"L"+X(n-1).toFixed(1)+" "+baseY;
+  let grid="";[max,mid].forEach(val=>{const gy=Y(val).toFixed(1);
+    grid+=`<line x1="${padL}" x2="${W-padR}" y1="${gy}" y2="${gy}" stroke="var(--line)" stroke-dasharray="3 5"/>`;});
+  let axes=`<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${baseY}" stroke="var(--axis)" stroke-width="1.4"/>`
+    +`<line x1="${padL}" y1="${baseY}" x2="${W-padR}" y2="${baseY}" stroke="var(--axis)" stroke-width="1.4"/>`;
+  tt.forEach((t,i)=>{const px=(padL+(i/Math.max(1,tt.length-1))*(W-padL-padR)).toFixed(1);
+    axes+=`<line x1="${px}" x2="${px}" y1="${baseY}" y2="${baseY+4}" stroke="var(--axis)" stroke-width="1"/>`;});
+  const svg=`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${col}" stop-opacity="0.30"/><stop offset="1" stop-color="${col}" stop-opacity="0.02"/>
+    </linearGradient></defs>
+    ${grid}${axes}
+    <path d="${area}Z" fill="url(#${gid})"/>
+    <path d="${line}" fill="none" stroke="${col}" stroke-width="3" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="2" vector-effect="non-scaling-stroke"/>
+  </svg>`;
+  const yp=val=>(Y(val)/H*100).toFixed(2), xp=i=>(X(i)/W*100).toFixed(2);
+  const ylabs=[max,mid,min].map(val=>
+    `<div class="caxis y" style="top:${yp(val)}%;width:${((padL-10)/W*100).toFixed(2)}%">${fnum(val,f)}</div>`).join("");
+  const xlabs=tt.map((t,i)=>{const px=((padL+(i/Math.max(1,tt.length-1))*(W-padL-padR))/W*100).toFixed(2);
+    return `<div class="caxis x" style="left:${px}%">${t}</div>`;}).join("");
+  return `<div class="chartwrap" data-id="${d.id}" style="--dotc:${col}" role="img" aria-label="${d.label} trend">
+    ${svg}${ylabs}${xlabs}
+    <div class="cunit">${d.unit}</div>
+    <div class="cvline"></div>
+    <div class="cend" style="left:${xp(n-1)}%;top:${yp(s[n-1])}%"></div>
+    <div class="cdot"></div>
+    <div class="ctip"></div>
+  </div>`;
+}
+function bindCharts(){
+  const {W,H,padL,padR,padT,padB}=CH;
+  document.querySelectorAll(".chartwrap").forEach(wrap=>{
+    if(wrap._bound)return; wrap._bound=true;         // bind each chart only once
+    const d=DATA.find(x=>x.id===wrap.dataset.id);if(!d)return;
+    const v=viewOf(d), s=v.s, n=s.length, f=d.fmt;
+    const min=Math.min(...s),max=Math.max(...s),span=(max-min)||1;
+    const dot=wrap.querySelector(".cdot"),vline=wrap.querySelector(".cvline"),
+          tip=wrap.querySelector(".ctip"),end=wrap.querySelector(".cend");
+    const Xp=i=>(padL+(i/Math.max(1,n-1))*(W-padL-padR))/W*100;
+    const Yp=val=>(padT+(1-(val-min)/span)*(H-padT-padB))/H*100;
+    function move(clientX){
+      const r=wrap.getBoundingClientRect();if(!r.width)return;
+      const vbx=(clientX-r.left)/r.width*W;
+      let idx=Math.round(((vbx-padL)/(W-padL-padR))*(n-1));
+      idx=Math.max(0,Math.min(n-1,idx));
+      const val=s[idx], x=Xp(idx)+"%", y=Yp(val)+"%", frac=n>1?idx/(n-1):0;
+      dot.style.left=x;dot.style.top=y;
+      tip.style.left=x;tip.style.top=y;
+      tip.innerHTML=fnum(val,f)+'<small>'+mLabel(Math.round(v.startAbs+v.span*frac),0)+' · '+d.unit+'</small>';
+      vline.style.left=x;vline.style.top=(padT/H*100)+"%";vline.style.height=((H-padT-padB)/H*100)+"%";
+      wrap.classList.add("hovering");if(end)end.style.opacity="0";
+    }
+    wrap.addEventListener("pointermove",e=>move(e.clientX));
+    wrap.addEventListener("pointerdown",e=>move(e.clientX));
+    wrap.addEventListener("pointerleave",()=>{wrap.classList.remove("hovering");if(end)end.style.opacity="";});
+  });
+}
+
+/* ---------- non-time-series charts (rankings, breakdowns, compositions) ---------- */
+const PAL=["#4b57f5","#17a06a","#e0533b","#d99a1f","#7c5cff","#3b7de0","#e86aa6","#2bb3b3"];
+function fmtItem(v,d){return (d.pfx||"")+v.toLocaleString("en-US",{minimumFractionDigits:d.idec||0,maximumFractionDigits:d.idec||0})+(d.sfx||"");}
+function barsHTML(d){
+  const max=Math.max(...d.items.map(x=>x.v));
+  return `<div class="barchart">`+d.items.map((it,i)=>{
+    const h=Math.max(6,it.v/max*100);
+    return `<div class="bar" title="${it.n}: ${fmtItem(it.v,d)}">
+      <span class="bv">${fmtItem(it.v,d)}</span>
+      <div class="bwrap"><div class="bcol" style="height:${h}%;background:${PAL[i%PAL.length]}"></div></div>
+      <span class="bn">${it.n}</span></div>`;}).join("")+`</div>`;
+}
+function hbarsHTML(d){
+  const max=Math.max(...d.items.map(x=>x.v));
+  return `<div class="hbars">`+d.items.map((it,i)=>
+    `<div class="hrow" title="${it.n}: ${fmtItem(it.v,d)}">
+      <span class="hn">${it.n}</span>
+      <div class="htrack"><div class="hfill" style="width:${Math.max(3,it.v/max*100)}%;background:${PAL[i%PAL.length]}"></div></div>
+      <span class="hv">${fmtItem(it.v,d)}</span></div>`).join("")+`</div>`;
+}
+function donutHTML(d){
+  const total=d.items.reduce((a,x)=>a+x.v,0),r=54,cx=66,cy=66,c=2*Math.PI*r; let acc=0;
+  const segs=d.items.map((it,i)=>{const len=it.v/total*c;
+    const s=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${PAL[i%PAL.length]}" stroke-width="18" stroke-dasharray="${len.toFixed(2)} ${(c-len).toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    acc+=len;return s;}).join("");
+  const legend=d.items.map((it,i)=>
+    `<div class="leg"><span class="ld" style="background:${PAL[i%PAL.length]}"></span><span class="ln">${it.n}</span><span class="lv">${fmtItem(it.v,d)}</span></div>`).join("");
+  return `<div class="donutwrap"><svg class="donut" viewBox="0 0 132 132" width="132" height="132" aria-hidden="true">${segs}</svg><div class="legend">${legend}</div></div>`;
+}
+function cardStatic(d,exp){
+  const C=CATS[d.cat], reg=regionFor(d);
+  const isSaved=saved.has(d.id), isUp=voted.has(d.id), up=d.up+(isUp?1:0);
+  const body=d.type==="bars"?barsHTML(d):d.type==="hbars"?hbarsHTML(d):donutHTML(d);
+  return `<article class="card" data-id="${d.id}" style="background:color-mix(in srgb, ${C.c} 10%, var(--surface))">
+    <div class="card-top">
+      <span class="cat" style="color:${C.c};background:${C.bg}">${C.name}</span>
+      ${exp?'<span class="exp">✦ Experimental</span>':''}
+      <span class="region"><span class="flag">${reg[0]}</span>${reg[1]}</span>
+      <span class="dotsep">·</span>
+      <span class="ago">${d.ago}</span>
+      <div class="ct-sp"></div>
+      <button class="bookmark ${isSaved?"on":""}" data-act="save" aria-label="Save">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12v18l-6-4-6 4Z"/></svg>
+      </button>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="stat-num">${d.num}</div>
+        <div class="stat-label">${d.label}</div>
+        <div class="stat-range">${d.sub||""}</div>
+      </div>
+      ${body}
+    </div>
+    <dl class="meta">
+      <div><dt>Source</dt><dd>${d.src}${d.verified?'<span class="verified">✓</span>':''}</dd></div>
+      <div><dt>Last updated</dt><dd>${d.updated}</dd></div>
+    </dl>
+    <div class="actions">
+      <button class="act up ${isUp?"on":""}" data-act="up">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+        <span class="count">${fmt(up)}</span>
+      </button>
+      <button class="act" data-act="debate">
+        <svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.3 7.3L3 21l1.7-6.7A8 8 0 1 1 21 12Z"/></svg>
+        Debate <span class="badge">${d.debate}</span>
+      </button>
+      <button class="act ni" data-act="notint" title="Not interested" aria-label="Not interested">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/></svg>
+      </button>
+      <button class="act share" data-act="share">
+        <svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.3"/><circle cx="17" cy="6" r="2.3"/><circle cx="17" cy="18" r="2.3"/><path d="M8 11 15 7M8 13l7 4"/></svg>
+      </button>
+    </div>
+  </article>`;
+}
+
+/* ---------- card ---------- */
+function sinceEl(d){
+  const v=viewOf(d), s=v.s, diff=s[s.length-1]-s[0], f=d.fmt;
+  const dir=diff>=0?"up":"down", arw=diff>=0?"↑":"↓", sign=diff>=0?"+":"−";
+  const nf=Math.abs(diff).toLocaleString("en-US",{minimumFractionDigits:f.dec,maximumFractionDigits:f.dec});
+  let body;
+  if(f.cur) body="$"+nf+(f.suf||"");
+  else if(f.suf==="%") body=nf+" pts";
+  else if(f.suf) body=nf+f.suf;
+  else body=nf+" "+(d.unit.split(/[ ,]/)[0]||"");
+  return `<div class="since ${dir}"><span class="arw">${arw}</span>${sign}${body}<em>since ${mLabel(v.startAbs,v.span)}</em></div>`;
+}
+function card(d,exp){
+  if(d.type&&d.type!=="line") return cardStatic(d,exp);
+  const C=CATS[d.cat], v=viewOf(d), reg=regionFor(d);
+  const isSaved=saved.has(d.id), isUp=voted.has(d.id), up=d.up+(isUp?1:0);
+  const fullM=d.series.length-1;              // every graph gets its own range picker
+  const STEPS=[[12,"1Y"],[36,"3Y"],[60,"5Y"],[120,"10Y"],[240,"20Y"],[360,"30Y"]];
+  const active=cardRanges[d.id]!=null?cardRanges[d.id]:((PERIOD==="max"||PERIOD>=fullM)?"max":PERIOD);
+  const crBtns=STEPS.filter(([m])=>m<fullM).map(([m,l])=>`<button data-cr="${m}" class="${active===m?"on":""}">${l}</button>`);
+  crBtns.push(`<button data-cr="max" class="${active==="max"?"on":""}">All</button>`);
+  const crHtml=`<div class="cardrange" title="Range shown for this statistic">`+crBtns.join("")+`</div>`;
+  return `<article class="card" data-id="${d.id}" style="background:color-mix(in srgb, ${C.c} 10%, var(--surface))">
+    <div class="card-top">
+      <span class="cat" style="color:${C.c};background:${C.bg}">${C.name}</span>
+      ${exp?'<span class="exp">✦ Experimental</span>':''}
+      <span class="region"><span class="flag">${reg[0]}</span>${reg[1]}</span>
+      <span class="dotsep">·</span>
+      <span class="ago">${d.ago}</span>
+      <div class="ct-sp"></div>
+      ${crHtml}
+      <button class="bookmark ${isSaved?"on":""}" data-act="save" aria-label="Save">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12v18l-6-4-6 4Z"/></svg>
+      </button>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="stat-num">${d.num}</div>
+        <div class="stat-label">${d.label}</div>
+        <div class="stat-range">${rangeLabel(v.startAbs,v.span)}</div>
+        ${sinceEl(d)}
+      </div>
+      ${chart(d)}
+    </div>
+    <dl class="meta">
+      <div><dt>Source</dt><dd>${d.src}${d.verified?'<span class="verified">✓</span>':''}</dd></div>
+      <div><dt>Last updated</dt><dd>${d.updated}</dd></div>
+    </dl>
+    <div class="actions">
+      <button class="act up ${isUp?"on":""}" data-act="up">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+        <span class="count">${fmt(up)}</span>
+      </button>
+      <button class="act" data-act="debate">
+        <svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.3 7.3L3 21l1.7-6.7A8 8 0 1 1 21 12Z"/></svg>
+        Debate <span class="badge">${d.debate}</span>
+      </button>
+      <button class="act ni" data-act="notint" title="Not interested" aria-label="Not interested">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/></svg>
+      </button>
+      <button class="act share" data-act="share">
+        <svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.3"/><circle cx="17" cy="6" r="2.3"/><circle cx="17" cy="18" r="2.3"/><path d="M8 11 15 7M8 13l7 4"/></svg>
+      </button>
+    </div>
+  </article>`;
+}
+function fmt(n){return n>=1000?(n/1000).toFixed(1).replace(/\.0$/,"")+"k":""+n}
+
+/* ---------- state ---------- */
+let view="feed", tab="latest", topicFilter=null, query="";
+function visible(){
+  let list=DATA.slice().filter(d=>!hidden.has(d.id));
+  if(view==="saved") list=list.filter(d=>saved.has(d.id));
+  if(topicFilter) list=list.filter(d=>d.cat===topicFilter);
+  if(query){const q=query.toLowerCase();
+    list=list.filter(d=>(d.label+" "+d.src+" "+CATS[d.cat].name+" "+d.num+" "+regionFor(d)[1]).toLowerCase().includes(q));}
+  if(tab==="debated") list.sort((a,b)=>b.debate-a.debate);
+  else if(tab==="following") list=list.filter(d=>d.verified);
+  return list;
+}
+function renderCards(){
+  const el=document.getElementById("cards");
+  flushDwell();
+  if(loadIO){loadIO.disconnect();loadIO=null;}
+  if(view==="profile"){ el.innerHTML=profilePanel(); updateStatus(); return; }
+  const list=visible();
+  if(!list.length){
+    el.innerHTML=`<div class="empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M6 3h12v18l-6-4-6 4Z"/></svg>
+      <b>${view==="saved"?"No saved statistics yet":"Nothing matches"}</b>
+      ${view==="saved"?"Tap the bookmark on any card to keep it here.":"Try a different topic or search."}
+    </div>`;
+    updateStatus(); return;
+  }
+  if(view==="feed"&&tab==="latest"&&!query){        // personalized endless feed, 3 at a time
+    feedShown=new Set();
+    const onboard=(phaseInfo().name==="Calibrating")?onboardingHTML():"";
+    el.innerHTML=onboard+'<div id="feedSentinel" style="height:1px"></div>';
+    appendBatch(); appendBatch();
+    setupLoadObserver();
+  }else{                                            // finite lists render in full
+    el.innerHTML=list.map(d=>card(d,false)).join("");
+    bindCharts(); observeNew();
+  }
+  updateStatus();
+}
+function profilePanel(){
+  return `<div class="panel">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px">
+      <div class="av" style="width:58px;height:58px;border-radius:50%;background:#16171b;color:#fff;display:grid;place-items:center;font-weight:700;font-size:20px;font-family:var(--f-display)">AM</div>
+      <div><div style="font-family:var(--f-display);font-size:22px;font-weight:800;letter-spacing:-.02em">Alex Morgan</div>
+      <div style="color:var(--muted)">@alexm · joined 2025</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;text-align:center">
+      ${[["Saved",saved.size],["Upvoted",voted.size],["Following",10]].map(([k,val])=>
+        `<div style="background:var(--surface);border-radius:16px;padding:18px 10px">
+          <div style="font-family:var(--f-display);font-size:30px;font-weight:800;font-variant-numeric:tabular-nums">${val}</div>
+          <div style="color:var(--muted);font-size:13px;margin-top:3px">${k}</div></div>`).join("")}
+    </div>
+    <p style="color:var(--muted);margin:22px 0 0;font-size:14px">Following all 10 statistical sources — BLS, World Bank, FRED, ECB, OECD, DBnomics, BEA, INSEE, CalcFi and CORE.</p>
+  </div>`;
+}
+function renderTopics(){
+  document.getElementById("topics").innerHTML=TOPICS.map(([k,name])=>
+    `<button class="topic ${topicFilter===k?"on":""}" data-topic="${k}" style="color:${CATS[k].c}">
+      <span class="dot" style="background:${CATS[k].c}"></span><span style="color:var(--fg-2)">${name}</span></button>`).join("");
+}
+function renderRanks(){
+  document.getElementById("ranks").innerHTML=RANKS.map(r=>{
+    const C=CATS[r.cat];
+    return `<div class="rank">
+      <div class="no">${r.no}</div>
+      <div class="rbody">
+        <div class="rcat" style="color:${C.c}">${C.name}</div>
+        <div class="rval">${r.val}</div>
+        <div class="rlabel">${r.label}</div>
+        <div class="rdelta ${r.dir}">${r.dir==="up"?"↑":"↓"} ${r.delta} this period</div>
+      </div></div>`;
+  }).join("");
+}
+
+/* ---------- events ---------- */
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");
+  clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),1900);}
+
+document.getElementById("cards").addEventListener("click",e=>{
+  const ob=e.target.closest("[data-ob]");
+  if(ob){applySignal(ob.dataset.ob,4,true);bumpSeen(ob.dataset.ob);toast("Added "+CATS[ob.dataset.ob].name+" to your interests");renderCards();return;}
+  const crb=e.target.closest("button[data-cr]");
+  if(crb){const a0=e.target.closest(".card");if(a0){cardRanges[a0.dataset.id]=crb.dataset.cr==="max"?"max":+crb.dataset.cr;renderCards();}return;}
+  const art=e.target.closest(".card");if(!art)return;
+  const id=art.dataset.id, d=DATA.find(x=>x.id===id);
+  const btn=e.target.closest("[data-act]");
+  if(!btn){ openDetail(id); return; }        // tap the card body = open detail (+3)
+  const act=btn.dataset.act;
+  if(act==="save"){
+    if(saved.has(id)){saved.delete(id);applySignal(d.cat,WEIGHT.unsave,false);toast("Removed from saved");}
+    else{saved.add(id);applySignal(d.cat,WEIGHT.save,true);toast("Saved");}
+    store.set("saved",[...saved]);
+    if(view==="saved"||view==="profile"){renderCards();}else{btn.classList.toggle("on",saved.has(id));}
+  }else if(act==="up"){
+    const was=voted.has(id);
+    if(was){voted.delete(id);applySignal(d.cat,WEIGHT.unlike,false);}else{voted.add(id);applySignal(d.cat,WEIGHT.like,true);}
+    store.set("voted",[...voted]);
+    btn.classList.toggle("on",!was);
+    btn.querySelector(".count").textContent=fmt(d.up+(voted.has(id)?1:0));
+  }else if(act==="debate"){
+    applySignal(d.cat,WEIGHT.comment,true);toast("Debate thread · "+d.debate+" arguments");
+  }else if(act==="share"){
+    applySignal(d.cat,WEIGHT.share,true);
+    const text=`${d.num} — ${d.label} (${d.src}) via Statline`;
+    if(navigator.clipboard&&navigator.clipboard.writeText)
+      navigator.clipboard.writeText(text).then(()=>toast("Copied to clipboard")).catch(()=>toast(text));
+    else toast(text);
+  }else if(act==="notint"){
+    applySignal(d.cat,WEIGHT.notint,true);hidden.add(id);toast("Got it — fewer like this");renderCards();
+  }
+});
+
+document.querySelectorAll(".nav-item").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  view=b.dataset.view; if(view!=="saved"&&view!=="profile")view="feed";
+  document.getElementById("feedHead").style.display=(view==="profile")?"none":"";
+  closeMenu(); renderCards();
+}));
+document.getElementById("topics").addEventListener("click",e=>{
+  const b=e.target.closest(".topic");if(!b)return;
+  const k=b.dataset.topic; topicFilter=topicFilter===k?null:k;
+  renderTopics(); renderCards();
+});
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); tab=b.dataset.tab; renderCards();
+}));
+
+// Range control
+document.getElementById("periods").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-m]");if(!b)return;
+  PERIOD=b.dataset.m==="max"?"max":+b.dataset.m;
+  store.set("period",PERIOD);
+  document.querySelectorAll("#periods button").forEach(x=>x.classList.toggle("on",x===b));
+  renderCards();
+});
+function initPeriodUI(){
+  document.querySelectorAll("#periods button").forEach(x=>{
+    const val=x.dataset.m==="max"?"max":+x.dataset.m;
+    x.classList.toggle("on",val===PERIOD);
+  });
+}
+
+const sw=document.getElementById("searchWrap"), si=document.getElementById("searchInput");
+document.getElementById("searchBtn").addEventListener("click",()=>{
+  sw.classList.toggle("open"); if(sw.classList.contains("open"))si.focus();
+  else{si.value="";query="";renderCards();}
+});
+si.addEventListener("input",()=>{query=si.value.trim();renderCards();});
+document.getElementById("bellBtn").addEventListener("click",()=>toast("3 sources published new figures today"));
+
+const root=document.documentElement;
+document.getElementById("themeToggle").addEventListener("click",()=>{
+  const cur=root.getAttribute("data-theme");
+  const dark=cur?cur==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+  root.setAttribute("data-theme",dark?"light":"dark");
+  renderCards();
+});
+
+const railL=document.getElementById("railL"), scrim=document.getElementById("scrim");
+function closeMenu(){railL.classList.remove("open");scrim.classList.remove("on");}
+document.getElementById("menuBtn").addEventListener("click",()=>{railL.classList.add("open");scrim.classList.add("on");});
+scrim.addEventListener("click",closeMenu);
+
+// detail modal close
+document.getElementById("detailClose").addEventListener("click",()=>{document.getElementById("detail").hidden=true;});
+document.getElementById("detail").addEventListener("click",e=>{if(e.target.id==="detail")e.currentTarget.hidden=true;});
+
+/* ---------- init ---------- */
+initPeriodUI(); renderTopics(); renderRanks(); updateStatus(); renderCards();
+</script>
